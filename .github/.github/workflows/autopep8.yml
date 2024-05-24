@@ -1,0 +1,33 @@
+name: AutoPEP8 Format
+
+on:
+  pull_request:
+
+jobs:
+  format-code:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install autopep8 and dependencies
+        run: |
+          pip install autopep8
+
+      - name: Set Git config
+        run: |
+          git config --global user.email "python-project-ci@sanvit.net"
+          git config --global user.name "Python Project CI"
+
+      - name: Run autopep8
+        run: |
+          autopep8 -iraa .
+
+      - name: Commit and push changes
+        run: |
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Apply autopep8 formatting"
+          git push
