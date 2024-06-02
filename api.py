@@ -5,7 +5,7 @@ import json as _json
 from .response import Response
 
 
-def send_request(method, url, body=None, headers=None):
+def send_request(method, url, body=None, headers=None, **kwargs):
     print(f"sending {method} request to {url} via custom requests module")
     headers = headers or {}
     parsed_url = urlparse(url)
@@ -19,6 +19,19 @@ def send_request(method, url, body=None, headers=None):
     conn.request(method, path, body=body, headers=headers)
     response = conn.getresponse()
     wrapped_response = Response(response)
+
+    allow_redirects = kwargs.get('allow_redirects', True)
+    max_redirects = kwargs.get('max_redirects', 5)
+    current_redirects = kwargs.get('current_redirects', 0)
+    if allow_redirects and 300 <= wrapped_response.status < 400 and current_redirects < max_redirects:
+        location = wrapped_response.headers.get('Location')
+        if location:
+            parsed_url = urlparse(location)
+            if not parsed_url.netloc:
+                location = urllib.parse.urljoin(url, location)
+            print(f"Redirecting to {location}")
+            return send_request(method, location, body=body, headers=headers, max_redirects=max_redirects, current_redirects=current_redirects + 1)
+
     return wrapped_response
 
 
