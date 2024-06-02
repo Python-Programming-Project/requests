@@ -86,7 +86,10 @@ def get(url, params=None, **kwargs):
 
 
 def post(url, data=None, json=None, **kwargs):
-    headers = {}
+    if kwargs.get('headers') is None:
+        headers = {}
+    else:
+        headers = kwargs['headers']
     body = None
     if data:
         body = urllib.parse.urlencode(data)
